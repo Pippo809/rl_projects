@@ -28,7 +28,7 @@ class BCAgent(BaseAgent):
         # training a BC agent refers to updating its actor using
         # the given observations and corresponding action labels
         log = self.actor.update(ob_no, ac_na)  # HW1: you will modify this
-
+        tensorboard_logs = {'Training Loss': log}
         return log
 
     def add_to_replay_buffer(self, paths):

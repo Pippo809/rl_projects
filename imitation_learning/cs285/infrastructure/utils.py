@@ -5,10 +5,10 @@ import time
 ############################################
 
 MJ_ENV_NAMES = ["Ant-v4", "Walker2d-v4", "HalfCheetah-v4", "Hopper-v4"]
-MJ_ENV_KWARGS = {name: {"render_mode": "rgb_array"} for name in MJ_ENV_NAMES}
+MJ_ENV_KWARGS = {name: {"render_mode": "human"} for name in MJ_ENV_NAMES}
 MJ_ENV_KWARGS["Ant-v4"]["use_contact_forces"] = True
 
-def sample_trajectory(env, policy, max_path_length, render=False):
+def sample_trajectory(env, policy, max_path_length, render=False, render_mode='human'):
 
     # initialize env for the beginning of a new rollout
     ob = env.reset()  # HINT: should be the output of resetting the env
@@ -20,10 +20,14 @@ def sample_trajectory(env, policy, max_path_length, render=False):
 
         # render image of the simulated env
         if render:
-            if hasattr(env, 'sim'):
-                image_obs.append(env.sim.render(camera_name='track', height=500, width=500)[::-1])
-            else:
-                image_obs.append(env.render())
+            if 'rgb_array' in render_mode or "single_rgb_array" in render_mode:
+                if hasattr(env, 'sim'):
+                    image_obs.append(env.sim.render(camera_name='track', height=500, width=500)[::-1])
+                else:
+                    image_obs.append(env.render(mode=render_mode))
+            if 'human' in render_mode:
+                image_obs.append(env.render(mode=render_mode))
+                time.sleep(env.model.opt.timestep)
 
         # use the most recent ob to decide what to do
         obs.append(ob)
@@ -65,8 +69,9 @@ def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, r
     paths = []
     while timesteps_this_batch < min_timesteps_per_batch:
 
-        paths.append(sample_trajectory(env, policy, max_path_length, render))
-        timesteps_this_batch = get_pathlength(paths[-1])
+        path = sample_trajectory(env, policy, max_path_length, render)
+        paths.append(path)
+        timesteps_this_batch += get_pathlength(path)
 
     return paths, timesteps_this_batch
 

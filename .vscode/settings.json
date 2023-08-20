@@ -1,0 +1,19 @@
+{
+    "pythonConfig": {
+    "n_iter": "1",
+    "expert_policy_file": "cs285/policies/experts",
+    "n_layers": "4",
+    "ep_len": "1000",
+    "video_log_freq": "-1",
+    "size": "128",
+    "learning_rate": "0.001",
+    "do_dagger": "False",
+    "batch_size": "1000",
+    "eval_batch_size": "1000",
+    "train_batch_size": "100",
+    "n_epochs": "500",
+    "num_agent_train_steps_per_iter": "10000",
+    
+}
+
+}

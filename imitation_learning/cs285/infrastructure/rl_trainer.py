@@ -9,6 +9,7 @@ import pickle
 from cs285.infrastructure import pytorch_util as ptu
 from cs285.infrastructure.logger import Logger
 from cs285.infrastructure import utils
+from gym.wrappers.monitoring.video_recorder import VideoRecorder
 
 # how many rollouts to save as videos to tensorboard
 MAX_NVIDEO = 2
@@ -42,9 +43,12 @@ class RL_Trainer(object):
 
         # Make the gym environment
         if self.params['video_log_freq'] == -1:
-            self.params['env_kwargs']['render_mode'] = None
+            self.params['env_kwargs']['render_mode'] = "human"
+        else:
+            self.params['env_kwargs']['render_mode'] = 'single_rgb_array'
         self.env = gym.make(self.params['env_name'], **self.params['env_kwargs'])
         self.env.reset(seed=seed)
+
 
         # Maximum length for episodes
         self.params['ep_len'] = self.params['ep_len'] or self.env.spec.max_episode_steps
@@ -173,7 +177,7 @@ class RL_Trainer(object):
             loaded_paths = pickle.load(open(load_initial_expertdata, 'rb'))
             return loaded_paths, 0, None
         elif itr > 0:
-            paths, envsteps_this_batch= utils.sample_trajectories(self.env, collect_policy, batch_size, self.params['ep_len'], False)
+            paths, envsteps_this_batch = utils.sample_trajectories(self.env, collect_policy, batch_size, self.params['ep_len'], False)
 
         # collect more rollouts with the same policy, to be saved as videos in tensorboard
         # note: here, we collect MAX_NVIDEO rollouts, each of length MAX_VIDEO_LEN
@@ -224,15 +228,15 @@ class RL_Trainer(object):
         eval_paths, eval_envsteps_this_batch = utils.sample_trajectories(self.env, eval_policy, self.params['eval_batch_size'], self.params['ep_len'])
 
         # save eval rollouts as videos in tensorboard event file
-        if self.log_video and train_video_paths != None:
+        if self.log_video: #and train_video_paths != None:
             print('\nCollecting video rollouts eval')
             eval_video_paths = utils.sample_n_trajectories(self.env, eval_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
 
             #save train/eval videos
             print('\nSaving train rollouts as videos...')
-            self.logger.log_paths_as_videos(train_video_paths, itr, fps=self.fps, max_videos_to_save=MAX_NVIDEO,
-                                            video_title='train_rollouts')
-            self.logger.log_paths_as_videos(eval_video_paths, itr, fps=self.fps,max_videos_to_save=MAX_NVIDEO,
+            # self.logger.log_paths_as_videos(train_video_paths, itr, fps=self.fps, max_videos_to_save=MAX_NVIDEO,
+            #                                 video_title='train_rollouts')
+            self.logger.log_paths_as_videos(eval_video_paths, itr, fps=self.fps, max_videos_to_save=MAX_NVIDEO,
                                              video_title='eval_rollouts')
 
         # save eval metrics
