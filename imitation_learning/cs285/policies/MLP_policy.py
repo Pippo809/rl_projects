@@ -26,6 +26,7 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
                  nn_baseline=False,
                  **kwargs
                  ):
+
         super().__init__(**kwargs)
 
         # init vars

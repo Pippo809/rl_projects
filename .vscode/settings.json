@@ -1,6 +1,6 @@
 {
     "pythonConfig": {
-    "n_iter": "1",
+    "n_iter": "10",
     "expert_policy_file": "cs285/policies/experts",
     "n_layers": "4",
     "ep_len": "1000",
