@@ -66,7 +66,7 @@ def main():
     parser.add_argument('--dont_standardize_advantages', '-dsa', action='store_true')
     parser.add_argument('--batch_size', '-b', type=int, default=1000) #steps collected per train iteration
     parser.add_argument('--eval_batch_size', '-eb', type=int, default=400) #steps collected per eval iteration
-    parser.add_argument('--train_batch_size', '-tb', type=int, default=1000) ##steps used per gradient step
+    parser.add_argument('--train_batch_size', '-tb', type=int, default=1000) #steps used per gradient step
 
     parser.add_argument('--num_agent_train_steps_per_iter', type=int, default=1)
     parser.add_argument('--discount', type=float, default=1.0)
@@ -83,6 +83,7 @@ def main():
 
     parser.add_argument('--save_params', action='store_true')
     parser.add_argument('--action_noise_std', type=float, default=0)
+    parser.add_argument('--checkpoint', type=str, default=None)
 
     args = parser.parse_args()
 
@@ -107,6 +108,9 @@ def main():
 
     logdir = logdir_prefix + args.exp_name + '_' + args.env_name + '_' + time.strftime("%d-%m-%Y_%H-%M-%S")
     logdir = os.path.join(data_path, logdir)
+    if args.checkpoint:
+        checkpoint = os.path.join(data_path, args.checkpoint)
+        params['checkpoint'] = checkpoint
     params['logdir'] = logdir
     if not(os.path.exists(logdir)):
         os.makedirs(logdir)

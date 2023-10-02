@@ -84,9 +84,16 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
     ##################################
 
-    # query the policy with observation(s) to get selected action(s)
     def get_action(self, obs: np.ndarray) -> np.ndarray:
-        # TODO: get this from HW1
+        if len(obs.shape) > 1:
+            observation = obs
+        else:
+            observation = obs[None]
+
+        # Return the action that the policy prescribes
+        
+        action = ptu.to_numpy(self.forward(ptu.from_numpy(observation)).sample())
+        return action
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
@@ -127,28 +134,40 @@ class MLPPolicyPG(MLPPolicy):
         actions = ptu.from_numpy(actions)
         advantages = ptu.from_numpy(advantages)
 
-        # TODO: update the policy using policy gradient
+        # update the policy using policy gradient
         # HINT1: Recall that the expression that we want to MAXIMIZE
             # is the expectation over collected trajectories of:
             # sum_{t=0}^{T-1} [grad [log pi(a_t|s_t) * (Q_t - b_t)]]
         # HINT2: you will want to use the `log_prob` method on the distribution returned
             # by the `forward` method
-
-        TODO
+        self.optimizer.zero_grad()
+        loss = -torch.mean(self.forward(observations).log_prob(actions) * advantages)
 
         if self.nn_baseline:
-            ## TODO: update the neural network baseline using the q_values as
+            ## update the neural network baseline using the q_values as
             ## targets. The q_values should first be normalized to have a mean
             ## of zero and a standard deviation of one.
 
             ## Note: You will need to convert the targets into a tensor using
-                ## ptu.from_numpy before using it in the loss
+            ## ptu.from_numpy before using it in the loss
+            self.baseline_optimizer.zero_grad()
 
-            TODO
+            norm_q_val = ptu.from_numpy((q_values - np.mean(q_values)) / np.std(q_values))
+            baseline_pred = self.baseline.forward(observations).squeeze()
+
+            assert norm_q_val.shape == baseline_pred.shape
+
+            loss_baseline = self.baseline_loss(baseline_pred, norm_q_val)
+            
+            loss_baseline.backward()
+            self.baseline_optimizer.step()
 
         train_log = {
             'Training Loss': ptu.to_numpy(loss),
+            "Baseline Loss": ptu.to_numpy(loss_baseline) if self.nn_baseline else "N/A"
         }
+        loss.backward()
+        self.optimizer.step()   
         return train_log
 
     def run_baseline_prediction(self, observations):
