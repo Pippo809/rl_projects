@@ -36,11 +36,21 @@ class MLPPolicySAC(MLPPolicy):
     @property
     def alpha(self):
         # TODO: Formulate entropy term
+
         return entropy
 
     def get_action(self, obs: np.ndarray, sample=True) -> np.ndarray:
         # TODO: return sample from distribution if sampling
         # if not sampling return the mean of the distribution 
+
+        if self.discrete:
+            action_distribution = torch.distributions.Categorical(logits=self.forward(obs))
+        else:
+            action_distribution = torch.distributions.Normal(loc=self.forward(obs), scale=torch.exp(self.log_std))
+        if self.training:
+            action = action_distribution.sample()
+        else:
+            action = action_distribution.mean
         return action
 
     # This function defines the forward pass of the network.

@@ -50,7 +50,20 @@ class SACAgent(BaseAgent):
         # 1. Compute the target Q value. 
         # HINT: You need to use the entropy term (alpha)
         # 2. Get current Q estimates and calculate critic loss
-        # 3. Optimize the critic  
+        # 3. Optimize the critic
+
+        q_t_val = self.critic_target.q_net(next_ob_no, self.actor(next_ob_no))
+        q_t_val = q_t_val - self.actor.log_alpha.exp() * self.actor.get_log_prob(next_ob_no)
+        q_t_val = re_n + self.gamma * (1 - terminal_n) * q_t_val
+        q_t_val = q_t_val.detach()
+
+        q_val = self.critic.q_net(ob_no, ac_na)
+        critic_loss = self.critic_loss(q_val, q_t_val)
+
+        self.critic.optimizer.zero_grad()
+        critic_loss.backward()
+        self.critic.optimizer.step()
+        
         return critic_loss
 
     def train(self, ob_no, ac_na, re_n, next_ob_no, terminal_n):
